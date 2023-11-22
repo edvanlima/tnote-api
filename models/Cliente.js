@@ -13,7 +13,7 @@ class Cliente {
     try {
       logger.info("Buscar clientes")
       var result = await knex.select().table("Cliente")
-      logger.info("Resultado: " + result.logger)
+      logger.info("Resultado: " + result)
       return result
     } catch (err) {
       console.log(err)
