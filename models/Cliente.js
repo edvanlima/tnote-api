@@ -1,93 +1,86 @@
-var knex = require("../database/connection");
+var knex = require("../database/connection")
+const winston = require("winston")
 
-class Cliente{
+const logger = winston.createLogger({
+  transports: [
+    new winston.transports.Console(),
+    new winston.transports.File({ filename: "combined.log" }),
+  ],
+})
 
-    async findAllClient(){
-        try{
+class Cliente {
+  async findAllClient() {
+    try {
+      logger.info("Buscar clientes")
+      var result = await knex.select().table("Cliente")
+      logger.info("Resultado: " + result.logger)
+      return result
+    } catch (err) {
+      console.log(err)
 
-            var result = await knex.select().table("Cliente");
-            return result;
+      return []
+    }
+  }
 
-        }catch(err){
+  async buscaClienteID(id_cliente) {
+    try {
+      var result = await knex
+        .select()
+        .where({ id_cliente: id_cliente })
+        .table("Cliente")
+        .first()
+      return { status: true, resultado: result }
+    } catch (err) {
+      return []
+    }
+  }
 
-            return [];
-
-        }
+  async new(Nome, Ativo, ID_sharepoint, ID_funcionario, last_update) {
+    if (Nome == "" || Nome == undefined) {
+      return { status: false }
     }
 
+    try {
+      var result = await knex
+        .insert({ Nome, Ativo, ID_sharepoint, ID_funcionario, last_update })
+        .table("Cliente")
+      return { status: true }
+    } catch (err) {
+      return { status: false, err: err }
+    }
+  }
 
-    async buscaClienteID(id_cliente){
-        try{
-
-            var result = await knex.select().where({id_cliente : id_cliente}).table("Cliente").first();
-            return ({status: true, resultado: result});
-
-        }catch(err){
-
-            return [];
-
-        }
+  async update(id_cliente, Nome, Ativo) {
+    if (id_cliente == "" || id_cliente == undefined) {
+      return { status: false }
     }
 
-    async new(Nome, Ativo, ID_sharepoint, ID_funcionario, last_update){
-
-        if(Nome == '' || Nome == undefined){
-
-            return({status: false});
-        }
-
-        try{
-            var result = await knex.insert({Nome, Ativo, ID_sharepoint, ID_funcionario, last_update}).table("Cliente");
-            return({status: true})
-
-        }catch(err){
-            return({status: false, err: err})
-
-        }
-        
+    if (Nome == "" || Nome == undefined) {
+      return { status: false }
     }
 
+    var _busca = await knex.select().table("Cliente").where({
+      ID_Cliente: id_cliente,
+    })
 
-    async update(id_cliente, Nome, Ativo){
+    if (_busca == undefined || _busca == "") {
+      return { status: false }
+    }
 
-        if(id_cliente == '' || id_cliente == undefined){
-            return({status: false})
-        }
-
-        if(Nome == '' || Nome == undefined){
-            return({status: false})
-        }
-
-        var _busca = await knex.select().table("Cliente").where({
-            ID_Cliente : id_cliente
+    try {
+      var resul = await knex("Cliente")
+        .where({ ID_Cliente: id_cliente })
+        .update({
+          Nome: Nome,
+          Ativo: Ativo,
         })
 
-        if(_busca == undefined || _busca ==''){
-            return({status : false})
-        }
-
-        try{
-            var resul = await knex("Cliente").where({ID_Cliente : id_cliente}).update({
-                Nome: Nome,
-                Ativo : Ativo
-            })
-
-            
-
-            return({status : true})
-
-        }catch(err){
-            console.log(err)
-            return({status : false})
-        }
- 
-
-        
-
-        
+      return { status: true }
+    } catch (err) {
+      console.log(err)
+      return { status: false }
     }
-
-
+  }
 }
 
-module.exports = new Cliente();
+module.exports = new Cliente()
